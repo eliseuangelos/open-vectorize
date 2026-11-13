@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#10131a">
-  <meta name="description" content="AngelosOpenVectorize: vetorizador de imagens online, gratuito e de código aberto. Converta PNG, JPG e WEBP em SVG editável, com processamento local e sem enviar arquivos para servidores.">
+  <meta name="description" content="AngelosOpenVectorize: vetorizador online gratuito e open source. Converta desenhos, logotipos e ilustrações em SVG editável com reconstrução geométrica validada pelos pixels, diretamente no navegador.">
   <meta name="keywords" content="vetorizar imagens grátis, vetorizador online gratuito, converter PNG para SVG, converter JPG para SVG, imagem para vetor, criar SVG online, vetorização de imagens">
   <meta name="author" content="Eliseu Fernandes Laurindo">
   <meta name="robots" content="index,follow">
@@ -13,7 +13,7 @@
   <meta property="og:type" content="website">
   <meta property="og:locale" content="pt_BR">
   <meta property="og:title" content="AngelosOpenVectorize — Vetorização de imagens online">
-  <meta property="og:description" content="Transforme imagens raster em SVG editável com processamento local no navegador.">
+  <meta property="og:description" content="Vetorize desenhos, logotipos e ilustrações gratuitamente, com processamento local e correção geométrica baseada na imagem original.">
   <meta name="color-scheme" content="light dark">
   <title>AngelosOpenVectorize — Vetorizador de imagens online e gratuito</title>
   <link rel="icon" type="image/svg+xml" href="assets/icons/favicon.svg">
@@ -48,7 +48,7 @@
         <span class="brand-mark"><svg><use href="#i-vector"/></svg></span>
         <span class="brand-copy"><strong>ANGELOS<span>OPENVECTORIZE</span></strong><small>RASTER → VECTOR</small></span>
       </a>
-      <div class="topbar-center"><span class="status-dot"></span> <span>GRATUITO</span><span class="topbar-separator">·</span><span>PROCESSAMENTO LOCAL</span><span class="topbar-separator">·</span><span id="engineStatus" class="engine-chip" data-engine="pending">VTRACER WASM · AGUARDANDO IMAGEM</span></div>
+      <div class="topbar-center"><span class="status-dot"></span> <span>GRATUITO</span><span class="topbar-separator">·</span><span>PROCESSAMENTO LOCAL</span><span class="topbar-separator">·</span><span id="engineStatus" class="engine-chip" data-engine="pending">VTRACER + GEOMETRIA · AGUARDANDO IMAGEM</span></div>
       <div class="topbar-actions">
         <button class="icon-button" id="helpButton" type="button" aria-label="Abrir ajuda" title="Ajuda"><svg><use href="#i-help"/></svg></button>
         <button class="icon-button" id="themeButton" type="button" aria-label="Alternar tema" title="Alternar tema"><svg id="themeIcon"><use href="#i-sun"/></svg></button>
@@ -61,7 +61,7 @@
         <div>
           <div class="eyebrow"><span class="eyebrow-line"></span> WORKSPACE DE VETORIZAÇÃO</div>
           <h1>Transforme pixels em <span>vetores.</span></h1>
-          <p class="intro-copy">Converta desenhos, logotipos e ilustrações em SVG editável com o motor open source VTracer, diretamente no seu dispositivo.</p>
+          <p class="intro-copy">Converta desenhos, logotipos e ilustrações em SVG editável com VTracer e reconstrução geométrica local, diretamente no seu dispositivo.</p>
         </div>
         <div class="privacy-pill"><svg><use href="#i-shield"/></svg><span>Suas imagens não saem do dispositivo</span></div>
       </section>
@@ -127,6 +127,11 @@
                 <div class="field-heading"><label for="smoothRange">Suavização de contornos</label><output id="smoothValue">2</output></div>
                 <input id="smoothRange" class="range-control" type="range" min="0" max="5" value="2">
               </div>
+              <div class="field-block compact-field" id="lineCorrectionBlock">
+                <div class="field-heading"><label for="lineCorrectionRange">Correção de linhas retas</label><output id="lineCorrectionValue">Forte</output></div>
+                <input id="lineCorrectionRange" class="range-control" type="range" min="0" max="5" value="4">
+                <small class="field-description">Confere a borda nos pixels originais antes de transformar uma curva em reta. No modo foto, fica desativada para preservar contornos orgânicos.</small>
+              </div>
               <div class="field-block compact-field">
                 <div class="field-heading"><label for="noiseRange">Remoção de ruído</label><output id="noiseValue">3 px</output></div>
                 <input id="noiseRange" class="range-control" type="range" min="0" max="20" value="3">
@@ -185,7 +190,7 @@
 
           <div class="canvas-footer">
             <div class="canvas-file-label"><span class="tiny-status-dot"></span><span id="canvasFileLabel">Nenhuma imagem carregada</span></div>
-            <div class="result-meta hidden" id="resultMeta"><span><b id="pathCount">0</b> caminhos</span><i></i><span><b id="dimensionLabel">—</b></span><i></i><span><b id="svgSizeLabel">—</b></span></div>
+            <div class="result-meta hidden" id="resultMeta"><span><b id="pathCount">0</b> caminhos</span><i></i><span><b id="lineFixCount">0</b> retas corrigidas</span><i></i><span><b id="dimensionLabel">—</b></span><i></i><span><b id="svgSizeLabel">—</b></span></div>
           </div>
         </section>
       </section>
@@ -200,9 +205,9 @@
       </section>
 
       <section class="info-grid" aria-label="Informações sobre o AngelosOpenVectorize">
-        <article class="info-card"><span class="info-icon"><svg><use href="#i-vector"/></svg></span><h3>Vetor de verdade</h3><p>O VTracer reconstrói as regiões como formas e curvas vetoriais editáveis, sem embutir a imagem original.</p></article>
+        <article class="info-card"><span class="info-icon"><svg><use href="#i-vector"/></svg></span><h3>Vetor de verdade</h3><p>O VTracer segmenta regiões; o Angelos Geometry mede bordas no raster e ajusta retas e junções somente quando a própria imagem confirma a geometria. A imagem original não é incorporada ao SVG.</p></article>
         <article class="info-card"><span class="info-icon"><svg><use href="#i-shield"/></svg></span><h3>Privacidade em primeiro lugar</h3><p>A conversão acontece localmente no navegador. Seus arquivos não são enviados a um servidor.</p></article>
-        <article class="info-card"><span class="info-icon"><svg><use href="#i-spark"/></svg></span><h3>Motor open source</h3><p>Baseado no VTracer, com segmentação por regiões, ajuste de curvas e otimização do SVG.</p></article>
+        <article class="info-card"><span class="info-icon"><svg><use href="#i-spark"/></svg></span><h3>Motor open source</h3><p>Combina VTracer com um pós-processador geométrico próprio, determinístico e executado localmente. Linhas candidatas são verificadas por amostragem subpixel da imagem original antes da correção.</p></article>
       </section>
       <footer class="site-footer"><span>ANGELOSOPENVECTORIZE <span class="footer-separator">/</span> OPEN SOURCE · GRATUITO</span><span>Desenvolvido por <a href="https://eliseuangelos.github.io/" target="_blank" rel="noopener noreferrer">Eliseu Fernandes Laurindo</a></span></footer>
     </main>
@@ -213,9 +218,9 @@
   <dialog class="modal help-modal" id="helpModal" aria-labelledby="helpModalTitle"><div class="modal-header"><div><span class="section-kicker">CENTRAL DE AJUDA</span><h2 id="helpModalTitle">Como funciona a vetorização?</h2></div><button class="icon-button" data-close-modal type="button" aria-label="Fechar"><svg><use href="#i-close"/></svg></button></div><div class="help-content">
     <details open><summary>O que é vetorização?</summary><p>É o processo de interpretar pixels e reconstruir regiões da imagem como formas geométricas. Em vez de uma grade fixa de pontos, o SVG descreve contornos por caminhos que podem ser redimensionados e editados.</p></details>
     <details><summary>Raster e vetor: qual a diferença?</summary><p>PNG, JPG e WEBP são formatos rasterizados: armazenam pixels. SVG é vetorial: descreve elementos como caminhos, formas e preenchimentos. Vetores podem ser ampliados sem a pixelização típica de imagens raster.</p></details>
-    <details><summary>O que cada modo faz?</summary><p><b>Preto e branco:</b> usa segmentação binária e pode aplicar limiar adaptativo. <b>Escala de cinza:</b> reduz a arte a níveis discretos de cinza. <b>Colorido:</b> usa watershed e composição mosaico para reconstruir regiões adjacentes. <b>Foto estilizada:</b> usa paleta e filtragem mais conservadoras; o resultado é uma interpretação vetorial, não uma reprodução fotográfica perfeita.</p></details>
-    <details><summary>Qual motor de vetorização é utilizado?</summary><p>O motor principal é o VTracer 1.0, um projeto open source em Rust compilado para WebAssembly. Ele oferece agrupamento de cores, segmentação watershed, modos de ajuste de curvas e otimização do SVG. Se o pacote WASM ainda não tiver sido compilado, a aplicação informa que está usando o motor de compatibilidade anterior.</p></details>
-    <details><summary>Como conseguir melhores resultados?</summary><p>Logotipos, ícones, desenhos com contornos definidos e ilustrações com áreas de cor chapadas costumam gerar bons vetores. Fotografias detalhadas precisam ser simplificadas e não podem ser reproduzidas como fotografia perfeita por um processo de vetorização comum.</p></details>
+    <details><summary>O que cada modo faz?</summary><p><b>Preto e branco:</b> usa segmentação binária e pode aplicar limiar adaptativo. <b>Escala de cinza:</b> reduz a arte a níveis discretos de cinza. <b>Colorido:</b> usa agrupamento de cores e composição mosaico para reconstruir regiões chapadas; o watershed fica reservado para fotografias e imagens de transição complexa. <b>Foto estilizada:</b> usa paleta e filtragem mais conservadoras; o resultado é uma interpretação vetorial, não uma reprodução fotográfica perfeita.</p></details>
+    <details><summary>Qual motor de vetorização é utilizado?</summary><p>O motor principal é o VTracer 1.0 em WebAssembly. Depois, o Angelos Geometry analisa segmentos quase retos e, quando a cor do preenchimento está disponível, verifica a posição da borda diretamente nos pixels da imagem original. Uma linha só é reconstruída quando a evidência raster também a confirma. Se o pacote WASM não estiver disponível, o motor de compatibilidade recebe a mesma verificação.</p></details>
+    <details><summary>Como conseguir melhores resultados?</summary><p>Para logotipos e desenhos com linhas retas, mantenha Correção geométrica em Forte ou Máxima. Para ilustrações orgânicas, use Equilibrada ou Leve. A correção raster só altera um trecho quando encontra uma borda de cor consistente no original; curvas sem essa evidência são preservadas. Reduza os detalhes para imagens ruidosas. Fotos continuam sendo interpretações estilizadas, não reproduções perfeitas.</p></details>
     <details><summary>Qual a diferença entre PNG, JPG e SVG?</summary><p>PNG suporta transparência e compressão sem perdas; JPG costuma ser menor para fotografias, mas usa compressão com perdas; SVG armazena instruções geométricas e cores como código vetorial.</p></details>
     <details><summary>Minhas imagens são enviadas para algum servidor?</summary><p>Não. A leitura, o processamento e as exportações são realizados dentro do navegador. O aplicativo não implementa cadastro, telemetria ou upload de imagens.</p></details>
     <details><summary>O SVG será editável?</summary><p>Sim. O resultado contém elementos <code>path</code> com coordenadas e preenchimentos. Você pode abrir o arquivo em editores vetoriais. A qualidade depende da imagem original e dos parâmetros escolhidos.</p></details>
@@ -225,6 +230,7 @@
 
   <script src="js/vtracer-config.js"></script>
   <script src="js/vectorizer.js"></script>
+  <script src="js/svg-geometry.js"></script>
   <script src="js/image-loader.js"></script>
   <script src="js/svg-export.js"></script>
   <script src="js/png-export.js"></script>

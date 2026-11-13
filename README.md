@@ -1,17 +1,19 @@
 # AngelosOpenVectorize
 
-**AngelosOpenVectorize** é um vetorizador web gratuito e de código aberto, criado para converter desenhos, ilustrações, logotipos e imagens em SVG com geometria editável. A aplicação foi projetada para hospedagem estática, incluindo GitHub Pages, sem conta, assinatura ou servidor de processamento.
+**AngelosOpenVectorize 3.1** é um vetorizador web gratuito e de código aberto, criado para converter desenhos, ilustrações e logotipos em SVG com geometria editável e correção de linhas validada pela imagem de origem. A aplicação foi projetada para hospedagem estática, incluindo GitHub Pages, sem conta, assinatura ou servidor de processamento.
 
-O motor principal planejado e integrado ao código é o **VTracer 1.0.0-alpha.4**, compilado para WebAssembly e executado em um Web Worker. O processamento da imagem ocorre localmente no navegador. O projeto mantém um motor geométrico de compatibilidade para funcionar enquanto o pacote WebAssembly ainda não tiver sido compilado.
+O motor de rastreamento é o **VTracer 1.0.0-alpha.4**, compilado para WebAssembly e executado em um Web Worker. Em seguida, o **Angelos Geometry** avalia segmentos quase retos contra os pixels originais: só troca uma curva por uma reta quando a transição de cor do raster também sustenta essa decisão. O processamento ocorre localmente no navegador. Um motor de compatibilidade continua disponível caso o pacote WebAssembly não seja carregado.
 
-> **Estado desta entrega:** o adaptador JavaScript, o crate Rust/wasm-bindgen, o worker, o script de compilação e os testes de configuração estão incluídos. O binário `.wasm` não foi gerado nesta sessão porque o ambiente de desenvolvimento não tinha Rust, Cargo, `wasm-pack` nem conectividade DNS para instalar dependências. Antes de publicar, execute `npm run build:wasm`. A interface identifica claramente quando está usando o motor de compatibilidade.
+> **Estado desta entrega:** a nova etapa de validação geométrica por raster está implementada e coberta por testes sintéticos. O código-fonte contém o adaptador Rust/wasm-bindgen e o workflow de compilação do VTracer. O binário `.wasm` não foi compilado novamente nesta sessão porque o ambiente não possui Rust/Cargo/wasm-pack nem acesso DNS para baixar dependências. O workflow do GitHub Pages continua responsável por gerar esse artefato. A interface diferencia VTracer ativo do motor alternativo.
 
 ## Funcionalidades
 
 - Importação PNG, JPG/JPEG, WEBP e BMP (conforme os decodificadores do navegador).
 - Seleção de arquivos, arrastar e soltar e colagem de imagens.
 - Quatro perfis de conversão: preto e branco, escala de cinza, colorido e foto estilizada.
-- VTracer com ajuste de curvas `spline` ou `polygon`, composição `stacked`/`cutout`, agrupamento por cores e watershed, filtro de pequenas regiões e otimização SVG.
+- VTracer com ajuste de curvas `spline` ou `polygon`, composição `stacked`/`cutout`, agrupamento de cores, watershed para imagens complexas, filtro de pequenas regiões e otimização SVG.
+- Angelos Geometry: amostragem subpixel da imagem original, identificação de trechos lineares, ajuste de reta por mínimos quadrados ortogonais e interseção de linhas em cantos.
+- Validação da correção geométrica: se a borda raster não confirmar uma reta, a curva original é preservada em vez de ser achatada por uma heurística isolada.
 - Limiar binário fixo e adaptativo (Bradley–Roth) para desenhos e digitalizações em preto e branco.
 - Controles de detalhes, limiar, níveis, quantidade de cores, suavização, ruído, brilho, contraste, saturação e transparência.
 - Comparação antes/depois, visualizações original/vetor, fundos configuráveis, zoom e movimentação da prévia.
@@ -31,10 +33,28 @@ Os perfis da interface são mapeados assim:
 |---|---|---|
 | Preto e branco | `clustering=bw`, limiar fixo ou adaptativo; `polygon` ou `spline` | Desenhos para colorir, silhuetas, line art e logos monocromáticos |
 | Escala de cinza | Quantização prévia em níveis de cinza + `color-cluster` | Ilustrações em tons e sombras discretas |
-| Colorido | `watershed` + composição `cutout`/mosaico + spline | Ilustrações com regiões coloridas adjacentes |
-| Foto estilizada | preset `photo` + paleta limitada + composição `stacked` | Posterização e interpretação vetorial aproximada de fotografias |
+| Colorido | `color-cluster` + composição `cutout`/mosaico + spline | Logotipos e ilustrações com regiões chapadas e paleta definida |
+| Foto estilizada | preset `photo` + watershed + paleta limitada + composição `stacked` | Posterização e interpretação vetorial aproximada de fotografias |
 
-O modo `cutout` do VTracer 1.0 forma uma tesselação sem frestas, ajustando uma fronteira compartilhada entre regiões adjacentes. O modo `stacked` empilha as formas na ordem de pintura e pode ser preferível quando há sobreposição de objetos.
+O modo `cutout` do VTracer 1.0 forma uma tesselação sem frestas, ajustando uma fronteira compartilhada entre regiões adjacentes. O modo `stacked` empilha as formas na ordem de pintura e pode ser preferível quando há sobreposição de objetos. O perfil colorido usa agrupamento de cores em vez de watershed para reduzir a fragmentação de áreas chapadas; watershed fica reservado ao perfil de fotos.
+
+## Angelos Geometry — reconstrução de retas com evidência raster
+
+Um rastreador convencional pode transformar uma borda reta em vários trechos de curva, principalmente quando a imagem tem antialiasing, compressão ou pequenas variações de cor. Simplesmente aumentar a suavização pode deformar círculos, cantos arredondados e contornos orgânicos.
+
+O Angelos Geometry usa a própria imagem como evidência: 
+
+1. Lê o `d` dos caminhos SVG e encontra grupos de segmentos que poderiam formar uma reta.
+2. Usa a cor de preenchimento do caminho para identificar qual lado da borda pertence à região.
+3. Faz amostragem bilinear dos pixels em passos subpixel ao longo da normal da linha.
+4. Localiza a transição entre o lado interno e o externo da região.
+5. Ajusta uma reta por mínimos quadrados ortogonais e mede o maior desvio dos pontos de borda.
+6. Só substitui a curva por uma reta quando o erro raster medido fica dentro da tolerância.
+7. Quando duas retas corrigidas se encontram, calcula a interseção para recuperar o canto sem pequenas folgas.
+
+Se a imagem indicar uma borda realmente curva, ou se não houver evidência suficiente, o segmento original é mantido. Isso evita que a correção geométrica transforme indiscriminadamente curvas suaves em polígonos. O controle **Correção de linhas retas** permite aumentar ou desativar a tolerância. No perfil Foto estilizada ele é desativado para evitar simplificações indevidas em bordas orgânicas.
+
+A técnica é determinística e não usa modelo de IA, rede externa ou serviço pago. Ela melhora especialmente logotipos, ícones, formas planas e desenhos com segmentos retilíneos; não equivale à reconstrução semântica de uma ferramenta comercial treinada por deep learning.
 
 A qualidade depende da imagem de entrada. Imagens de origem muito pequenas, desfocadas, comprimidas ou com contornos ambíguos podem continuar exigindo retoques manuais. A vetorização de fotos não produz uma cópia fotográfica perfeita.
 
@@ -60,7 +80,7 @@ Na raiz deste projeto, execute:
 npm run build:wasm
 ```
 
-O script executa `wasm-pack build` com alvo `web` e saída otimizada para produção. Os arquivos serão gerados em:
+O script executa `wasm-pack build` com alvo `web`. A etapa opcional `wasm-opt` está desativada no perfil release porque a versão empacotada pelo `wasm-pack` pode rejeitar instruções WebAssembly modernas (como `memory.copy`, `memory.fill` e conversões float não trapping) usadas pelo compilador Rust. Isso não desativa esses recursos no módulo nem impede `wasm-bindgen` de gerar o pacote; apenas deixa de aplicar a otimização adicional do Binaryen. Os arquivos serão gerados em:
 
 ```text
 js/wasm/pkg/
@@ -105,7 +125,7 @@ O repositório inclui `.github/workflows/pages.yml`. Ao enviar alterações para
 4. compila o VTracer para WebAssembly;
 5. prepara a pasta `dist/` e publica no GitHub Pages.
 
-Para ativar, envie todos os arquivos para o GitHub e, em **Settings → Pages → Build and deployment → Source**, selecione **GitHub Actions**. Na primeira execução, o workflow compila as dependências Rust e gera o arquivo WebAssembly utilizado pelo navegador.
+Para ativar, envie todos os arquivos para o GitHub e, em **Settings → Pages → Build and deployment → Source**, selecione **GitHub Actions**. Na primeira execução, o workflow compila as dependências Rust e gera o arquivo WebAssembly utilizado pelo navegador. O `wasm-opt` é intencionalmente ignorado nessa compilação para evitar a incompatibilidade de validação mostrada no log do GitHub Actions; o navegador executa o módulo WebAssembly normalmente.
 
 ### Publicação manual
 
@@ -136,6 +156,7 @@ AngelosOpenVectorize/
 │   ├── app.js
 │   ├── image-loader.js
 │   ├── vtracer-config.js
+│   ├── svg-geometry.js               # Angelos Geometry: retas validadas pelo raster
 │   ├── vectorizer.js                 # fallback de compatibilidade
 │   ├── svg-export.js
 │   ├── png-export.js
@@ -151,7 +172,8 @@ AngelosOpenVectorize/
 ├── .github/workflows/pages.yml
 └── tests/
     ├── vectorizer.test.js
-    └── vtracer-config.test.js
+    ├── vtracer-config.test.js
+    └── svg-geometry.test.js           # retas recuperadas e curvas preservadas
 ```
 
 ## Privacidade e segurança
@@ -170,6 +192,7 @@ AngelosOpenVectorize/
 
 ## Referências técnicas
 
+- Arquitetura pública do Open Vectorizer (referência de pesquisa para cobertura subpixel, ajuste de retas, cantos e seleção geométrica; o código-fonte desse projeto não é incorporado nesta aplicação): https://github.com/vardirhq/open-vectorizer
 - VTracer: https://github.com/visioncortex/vtracer
 - Documentação do motor: https://www.visioncortex.org/vtracer-docs/
 - Biblioteca JavaScript/Node oficial: https://www.npmjs.com/package/@visioncortex/vtracer

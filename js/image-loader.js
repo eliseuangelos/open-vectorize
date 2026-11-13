@@ -54,6 +54,8 @@
     canvas.height = height;
     const context = canvas.getContext('2d', { willReadFrequently: true });
     if (!context) throw new Error('Canvas 2D não está disponível neste navegador.');
+    context.imageSmoothingEnabled = true;
+    context.imageSmoothingQuality = 'high';
     context.clearRect(0, 0, width, height);
     context.drawImage(source.image, 0, 0, width, height);
     return { imageData: context.getImageData(0, 0, width, height), width, height, canvas };

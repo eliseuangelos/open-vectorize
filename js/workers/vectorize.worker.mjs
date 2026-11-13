@@ -1,6 +1,7 @@
 /* Module worker: VTracer WASM is preferred; legacy vectorizer is an explicit fallback. */
 import '../vtracer-config.js';
 import '../vectorizer.js';
+import '../svg-geometry.js';
 
 let vtracerPromise;
 
@@ -48,10 +49,14 @@ self.onmessage = async function (event) {
   try {
     const vtracer = await loadVTracer();
     let result;
+    const source = new Uint8ClampedArray(buffer);
+    // The same locally prepared pixels are supplied to the geometric verifier.
+    // This lets the postprocessor validate candidate straight edges against
+    // the source raster instead of smoothing paths based on shape alone.
+    const evidencePixels = self.VTracerConfig.preparePixels({ data: source, width, height }, options);
 
     if (vtracer) {
-      const source = new Uint8ClampedArray(buffer);
-      const pixels = self.VTracerConfig.preparePixels({ data: source, width, height }, options);
+      const pixels = evidencePixels;
       const config = self.VTracerConfig.buildOptions(options);
       let svg = vtracer.convert(pixels, width, height, JSON.stringify(config));
       if (typeof svg !== 'string' || !/<svg\b/i.test(svg) || !/<path\b/i.test(svg)) {
@@ -67,11 +72,23 @@ self.onmessage = async function (event) {
         stats: buildStats(svg, options.outputWidth || width, options.outputHeight || height, width, height)
       };
     } else {
-      const fallback = self.Vectorizer.trace({ data: new Uint8ClampedArray(buffer), width, height }, options);
+      const fallback = self.Vectorizer.trace({ data: source, width, height }, options);
       fallback.engine = 'legacy-fallback';
       fallback.stats.engine = 'legacy-fallback';
       result = fallback;
     }
+
+    const geometry = self.SvgGeometry.regularizeSvg(result.svg, {
+      ...options,
+      width,
+      height,
+      outputWidth: options.outputWidth || width,
+      outputHeight: options.outputHeight || height,
+      rasterData: { data: evidencePixels, width, height }
+    });
+    result.svg = geometry.svg;
+    result.stats = { ...result.stats, ...geometry.stats };
+    result.geometryEngine = 'angelos-geometry';
 
     self.postMessage({ id, result });
   } catch (error) {

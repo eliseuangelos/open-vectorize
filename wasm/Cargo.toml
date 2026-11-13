@@ -20,5 +20,11 @@ lto = true
 codegen-units = 1
 strip = true
 
+
+# O binario gerado pelo rustc usa recursos WebAssembly modernos (bulk memory e
+# non-trapping float-to-int). O wasm-opt distribuído pelo wasm-pack nesta CI
+# valida esses recursos com defaults incompatíveis e falha antes do empacotamento.
+# Desativar somente a otimização opcional mantém o WASM funcional e compatível
+# com navegadores modernos, permitindo que wasm-bindgen conclua o pacote.
 [package.metadata.wasm-pack.profile.release]
 wasm-opt = false

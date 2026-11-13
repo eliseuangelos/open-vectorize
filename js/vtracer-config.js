@@ -71,23 +71,28 @@
     const detail = clamp(Number(options.detail || 3), 1, 5);
     const smooth = clamp(Number(options.smooth ?? 2), 0, 5);
     const noise = clamp(Number(options.noise ?? 3), 0, 20);
+    const lineCorrection = clamp(Number(options.lineCorrection ?? 3), 0, 5);
     const isBw = mode === 'bw';
     const isGray = mode === 'gray';
     const isPhoto = mode === 'photo';
 
     return {
       preset: isBw ? 'bw' : (isPhoto ? 'photo' : (mode === 'color' ? 'poster' : 'default')),
-      clustering: isBw ? 'bw' : (mode === 'color' ? 'watershed' : 'color-cluster'),
+      // Flat-color artwork benefits from global color clustering; watershed
+      // is reserved for photos where edge-aware over-segmentation is useful.
+      clustering: isBw ? 'bw' : (isPhoto ? 'watershed' : 'color-cluster'),
       hierarchical: mode === 'color' ? 'cutout' : 'stacked',
       mode: smooth === 0 ? 'polygon' : 'spline',
       filterSpeckle: Math.round(noise * 0.65),
       colorPrecision: clamp(4 + detail, 5, 8),
       layerDifference: isPhoto ? 34 : (isGray ? 8 : 12),
-      cornerThreshold: Math.round(36 + smooth * 15),
+      cornerThreshold: Math.round(60 + (smooth - 2) * 2),
       lengthThreshold: [7, 5.5, 4, 3, 2][detail - 1],
       maxIterations: 10,
       spliceThreshold: 45,
-      simplify: smooth === 0 ? null : Number((0.45 + smooth * 0.32).toFixed(2)),
+      // VTracer 1.0 recommends about 1–2.5 px. We bias toward fewer,
+      // cleaner curves, then let Angelos Geometry correct near-straight runs.
+      simplify: smooth === 0 ? null : Number(clamp(0.85 + smooth * 0.22 + lineCorrection * 0.1, 0.8, 2.8).toFixed(2)),
       pathPrecision: 2,
       maxColors: isBw ? null : (isGray ? clamp(Number(options.levels || 6), 2, 16) : clamp(Number(options.colors || 12), 2, 32)),
       optimize: 2,

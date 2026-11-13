@@ -28,13 +28,15 @@ assert.equal(bw.mode, 'polygon');
 assert.equal(bw.preset, 'bw');
 
 const illustration = buildOptions({ mode: 'color', colors: 16, detail: 4, smooth: 3 });
-assert.equal(illustration.clustering, 'watershed');
+assert.equal(illustration.clustering, 'color-cluster');
 assert.equal(illustration.hierarchical, 'cutout');
 assert.equal(illustration.mode, 'spline');
 assert.equal(illustration.maxColors, 16);
+assert.ok(illustration.simplify >= 1 && illustration.simplify <= 2.5, 'simplificação fica na faixa recomendada pelo VTracer');
 
 const photo = buildOptions({ mode: 'photo', colors: 10, detail: 2 });
 assert.equal(photo.preset, 'photo');
+assert.equal(photo.clustering, 'watershed');
 assert.equal(photo.hierarchical, 'stacked');
 assert.equal(photo.maxColors, 10);
 

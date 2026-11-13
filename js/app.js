@@ -5,7 +5,7 @@
   const $$ = (selector) => Array.from(document.querySelectorAll(selector));
   const defaults = {
     mode: 'bw', detail: 3, threshold: 128, levels: 6, colors: 12,
-    smooth: 2, noise: 3, brightness: 0, contrast: 0, saturation: 0,
+    smooth: 2, lineCorrection: 4, noise: 3, brightness: 0, contrast: 0, saturation: 0,
     preserveTransparency: true, adaptiveThreshold: false
   };
 
@@ -34,6 +34,7 @@
     ['levelsRange', 'levelsValue', (v) => v],
     ['colorsRange', 'colorsValue', (v) => v],
     ['smoothRange', 'smoothValue', (v) => v],
+    ['lineCorrectionRange', 'lineCorrectionValue', (v) => ({0:'Desativada',1:'Suave',2:'Leve',3:'Equilibrada',4:'Forte',5:'Máxima'}[v])],
     ['noiseRange', 'noiseValue', (v) => `${v} px`],
     ['brightnessRange', 'brightnessValue', (v) => Number(v) > 0 ? `+${v}` : v],
     ['contrastRange', 'contrastValue', (v) => Number(v) > 0 ? `+${v}` : v],
@@ -48,6 +49,7 @@
       levels: Number($('#levelsRange').value),
       colors: Number($('#colorsRange').value),
       smooth: Number($('#smoothRange').value),
+      lineCorrection: state.mode === 'photo' ? 0 : Number($('#lineCorrectionRange').value),
       noise: Number($('#noiseRange').value),
       brightness: Number($('#brightnessRange').value),
       contrast: Number($('#contrastRange').value),
@@ -83,11 +85,13 @@
     if (modeChanged) $('#colorsRange').value = mode === 'photo' ? '10' : '12';
     updateRangeLabels();
     $('#saturationBlock').classList.toggle('hidden', mode === 'bw' || mode === 'gray');
+    $('#lineCorrectionRange').disabled = mode === 'photo';
+    $('#lineCorrectionRange').title = mode === 'photo' ? 'Desativada no modo foto para preservar contornos orgânicos.' : 'Verifica linhas candidatas contra a imagem original.';
     if (state.source) scheduleTrace();
   }
 
   function getMaxDimension(detail) {
-    return 390 + Number(detail) * 55;
+    return [640, 760, 880, 1000, 1100][Number(detail) - 1] || 880;
   }
 
   function setBusy(active, message = 'Analisando pixels e contornos') {
@@ -166,13 +170,13 @@
     const chip = $('#engineStatus');
     if (!chip) return;
     if (state.engine === 'vtracer') {
-      chip.textContent = 'VTRACER WASM · ATIVO';
+      chip.textContent = 'VTRACER + GEOMETRIA VALIDADA';
       chip.dataset.engine = 'vtracer';
-      chip.title = 'Conversão realizada pelo VTracer WebAssembly local.';
+      chip.title = 'VTracer WebAssembly com Angelos Geometry: candidatos a retas são conferidos nos pixels originais antes de alterar o SVG.';
     } else if (state.engine === 'legacy-fallback') {
-      chip.textContent = 'MOTOR ALTERNATIVO · WASM AUSENTE';
+      chip.textContent = 'MOTOR LOCAL + GEOMETRIA VALIDADA';
       chip.dataset.engine = 'fallback';
-      chip.title = 'O pacote VTracer WebAssembly ainda não foi compilado. Consulte README.md.';
+      chip.title = 'Motor de compatibilidade com Angelos Geometry raster-aware. O VTracer WASM não foi carregado; trechos retos são conferidos na imagem original.';
     } else {
       chip.textContent = 'VTRACER WASM · VERIFICANDO';
       chip.dataset.engine = 'pending';
@@ -199,6 +203,7 @@
     $('#originalPreview').src = state.source.objectUrl;
     $('#resultMeta').classList.remove('hidden');
     $('#pathCount').textContent = (result.stats.pathCount ?? result.stats.contourCount ?? 0).toLocaleString('pt-BR');
+    $('#lineFixCount').textContent = Number(result.stats.rasterLinesRecovered || 0).toLocaleString('pt-BR');
     $('#dimensionLabel').textContent = `${result.stats.width} × ${result.stats.height}`;
     $('#svgSizeLabel').textContent = formatBytes(result.stats.svgBytes);
     $('#downloadSvgButton').disabled = false;
@@ -210,9 +215,14 @@
     updateStageView();
     setZoom(state.zoom, false);
     const pathCount = (result.stats.pathCount ?? result.stats.contourCount ?? 0).toLocaleString('pt-BR');
+    const simplified = Number(result.stats.geometryCommandsRemoved || 0);
+    const recoveredLines = Number(result.stats.rasterLinesRecovered || 0);
+    const geometryNote = recoveredLines > 0
+      ? ` ${recoveredLines.toLocaleString('pt-BR')} segmentos retos conferidos contra os pixels originais.`
+      : (simplified > 0 ? ` ${simplified.toLocaleString('pt-BR')} segmentos simplificados.` : ' Geometria preservada sem ajustes agressivos.');
     UIControls.toast(state.engine === 'vtracer'
-      ? `VTracer gerou um SVG com ${pathCount} caminhos.`
-      : `Conversão alternativa concluída com ${pathCount} caminhos. Compile o VTracer WASM para ativar o motor principal.`);
+      ? `VTracer + Angelos Geometry geraram ${pathCount} caminhos.${geometryNote}`
+      : `Motor local + Angelos Geometry geraram ${pathCount} caminhos.${geometryNote}`);
   }
 
   function formatBytes(bytes) {
@@ -226,6 +236,16 @@
       try {
         if (requestId !== state.requestId || !state.imageData) return;
         const result = Vectorizer.trace(state.imageData, options);
+        const evidencePixels = VTracerConfig.preparePixels(state.imageData, options);
+        const geometry = SvgGeometry.regularizeSvg(result.svg, {
+          ...options,
+          width: state.imageData.width,
+          height: state.imageData.height,
+          rasterData: { data: evidencePixels, width: state.imageData.width, height: state.imageData.height }
+        });
+        result.svg = geometry.svg;
+        result.stats = { ...result.stats, ...geometry.stats };
+        result.geometryEngine = 'angelos-geometry';
         result.engine = 'legacy-fallback';
         result.stats.engine = 'legacy-fallback';
         applyResult(result);
@@ -353,7 +373,7 @@
     for (const [key, value] of Object.entries(defaults)) {
       const map = {
         detail: 'detailRange', threshold: 'thresholdRange', levels: 'levelsRange', colors: 'colorsRange',
-        smooth: 'smoothRange', noise: 'noiseRange', brightness: 'brightnessRange', contrast: 'contrastRange',
+        smooth: 'smoothRange', lineCorrection: 'lineCorrectionRange', noise: 'noiseRange', brightness: 'brightnessRange', contrast: 'contrastRange',
         saturation: 'saturationRange'
       };
       if (map[key]) document.getElementById(map[key]).value = value;

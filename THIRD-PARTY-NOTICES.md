@@ -13,3 +13,10 @@ A aplicação AngelosOpenVectorize e o adaptador de integração são mantidos s
 Licenças do VTracer:
 - https://github.com/visioncortex/vtracer/blob/master/LICENSE
 - https://www.apache.org/licenses/LICENSE-2.0
+
+## Open Vectorizer — referência técnica, não incorporada
+
+- Projeto pesquisado: https://github.com/vardirhq/open-vectorizer
+- Licença declarada no repositório: MIT.
+- Uso nesta aplicação: consulta pública da documentação/arquitetura como referência de pesquisa. Nenhum código-fonte, binário ou dependência do Open Vectorizer foi copiado ou empacotado nesta entrega.
+- O pós-processador `js/svg-geometry.js` é uma implementação independente do AngelosOpenVectorize.

@@ -407,7 +407,7 @@
     const width = imageData.width;
     const height = imageData.height;
     if (width < 1 || height < 1) throw new RangeError('A imagem está vazia.');
-    if (width * height > 650000) throw new RangeError('A imagem de trabalho excede o limite seguro de pixels. Reduza o tamanho e tente novamente.');
+    if (width * height > 1250000) throw new RangeError('A imagem de trabalho excede o limite seguro de 1,25 megapixel. Reduza o tamanho e tente novamente.');
 
     const mode = ['bw', 'gray', 'color', 'photo'].includes(options.mode) ? options.mode : 'color';
     const adjusted = applyAdjustments(imageData, options);
