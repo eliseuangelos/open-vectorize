@@ -1,0 +1,12 @@
+# Rust build output
+/wasm/target/
+
+# Local temporary files
+*.log
+.DS_Store
+Thumbs.db
+
+# Keep generated browser artifacts in js/wasm/pkg/ under version control
+
+# Generated GitHub Pages site
+/dist/
