@@ -170,15 +170,15 @@
     const chip = $('#engineStatus');
     if (!chip) return;
     if (state.engine === 'vtracer') {
-      chip.textContent = 'VTRACER + GEOMETRIA VALIDADA';
+      chip.textContent = 'VTracer WASM + Angelos Geometry';
       chip.dataset.engine = 'vtracer';
       chip.title = 'VTracer WebAssembly com Angelos Geometry: candidatos a retas são conferidos nos pixels originais antes de alterar o SVG.';
     } else if (state.engine === 'legacy-fallback') {
-      chip.textContent = 'MOTOR LOCAL + GEOMETRIA VALIDADA';
+      chip.textContent = 'Reserva JS + Angelos Geometry';
       chip.dataset.engine = 'fallback';
       chip.title = 'Motor de compatibilidade com Angelos Geometry raster-aware. O VTracer WASM não foi carregado; trechos retos são conferidos na imagem original.';
     } else {
-      chip.textContent = 'VTRACER WASM · VERIFICANDO';
+      chip.textContent = 'Verificando motor…';
       chip.dataset.engine = 'pending';
     }
   }
@@ -192,6 +192,8 @@
     state.resultSvg = result.svg;
     state.stats = result.stats;
     setEngineStatus(result.engine || result.stats.engine || 'legacy-fallback');
+    const discardedEdits = SvgEditor.reset();
+    if (discardedEdits) window.setTimeout(() => UIControls.toast('As edições foram descartadas porque o vetor foi recalculado.', 'error'), 200);
     $('#vectorPreview').innerHTML = result.svg;
     const svgElement = $('#vectorPreview svg');
     if (svgElement) {
@@ -207,6 +209,7 @@
     $('#dimensionLabel').textContent = `${result.stats.width} × ${result.stats.height}`;
     $('#svgSizeLabel').textContent = formatBytes(result.stats.svgBytes);
     $('#downloadSvgButton').disabled = false;
+    SvgEditor.enable(true);
     $('#downloadPngButton').disabled = false;
     $('#viewCodeButton').disabled = false;
     $('#modalDownloadButton').disabled = false;
@@ -304,7 +307,7 @@
       $('#emptyState').classList.add('hidden');
       $('#visualStage').classList.remove('hidden');
       $('#originalPreview').src = decoded.objectUrl;
-      $('#vectorPreview').innerHTML = '';
+      SvgEditor.reset(); SvgEditor.enable(false); $('#vectorPreview').innerHTML = '';
       $('#resultMeta').classList.add('hidden');
       $('#downloadSvgButton').disabled = true;
       $('#downloadPngButton').disabled = true;
@@ -336,7 +339,7 @@
     $('#downloadSvgButton').disabled = true;
     $('#downloadPngButton').disabled = true;
     $('#viewCodeButton').disabled = true;
-    $('#vectorPreview').innerHTML = '';
+    SvgEditor.reset(); SvgEditor.enable(false); $('#vectorPreview').innerHTML = '';
     $('#originalPreview').removeAttribute('src');
     $('#zoomLabel').textContent = '100%';
     state.currentView = 'compare';
@@ -458,7 +461,7 @@
     $('#resetButton').addEventListener('click', resetSettings);
     $('#generateButton').addEventListener('click', traceNow);
     document.addEventListener('keydown', (event) => {
-      if (event.key === 'Enter' && state.source && !event.ctrlKey && !event.metaKey && !event.altKey) {
+      if (event.key === 'Enter' && state.source && !SvgEditor.isActive() && !event.ctrlKey && !event.metaKey && !event.altKey) {
         const target = event.target;
         const typing = target && (['INPUT', 'TEXTAREA', 'SELECT', 'BUTTON'].includes(target.tagName) || target.isContentEditable);
         if (!typing) { event.preventDefault(); traceNow(); }
@@ -541,6 +544,21 @@
     });
   }
 
+  function initEditor() {
+    SvgEditor.init({
+      host: $('#vectorPreview'), layer: $('#vectorLayer'), toggle: $('#editToggle'), bar: $('#editBar'),
+      undo: $('#editUndo'), redo: $('#editRedo'), del: $('#editDelete'), color: $('#editColor'),
+      onEnter() { state.currentView = 'vector'; updateStageView(); },
+      onChange(svg) {
+        state.resultSvg = svg;
+        $('#pathCount').textContent = (svg.match(/<path\b/gi) || []).length.toLocaleString('pt-BR');
+        $('#svgSizeLabel').textContent = formatBytes(new Blob([svg]).size);
+      }
+    });
+    const year = document.getElementById('year');
+    if (year) year.textContent = new Date().getFullYear();
+  }
+
   function init() {
     UIControls.initTheme();
     UIControls.initDialogs();
@@ -548,6 +566,7 @@
     initFileInputs();
     initCanvasControls();
     initExports();
+    initEditor();
     setMode(defaults.mode);
     window.addEventListener('beforeunload', () => {
       if (state.source) ImageLoader.release(state.source);

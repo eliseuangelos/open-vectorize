@@ -19,7 +19,8 @@ O motor de rastreamento é o **VTracer 1.0.0-alpha.4**, compilado para WebAssemb
 - Comparação antes/depois, visualizações original/vetor, fundos configuráveis, zoom e movimentação da prévia.
 - Exportação SVG e PNG em 1×, 2× e 4×; fundo transparente, branco ou personalizado.
 - Visualização e cópia do código SVG.
-- Tema claro/escuro com preferência local.
+- Tema claro institucional por padrão (EXECUTIVE DIGITAL) e tema escuro, com preferência local.
+- Editor de vetor básico: selecionar, mover, trocar cor, excluir, desfazer e refazer. As edições valem para SVG, PNG e código exportados.
 - Processamento em Web Worker.
 - Sem telemetria, cadastro, APIs ou dependências remotas obrigatórias durante o uso.
 

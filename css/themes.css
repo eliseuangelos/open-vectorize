@@ -1,54 +1,23 @@
-body[data-theme="dark"] {
-  color-scheme: dark;
-  --page-bg: #11141b;
-  --surface: #191e27;
-  --surface-raised: #202631;
-  --text: #edf1f5;
-  --muted: #9aa5b3;
-  --faint: #687585;
-  --line: #ffffff12;
-  --hover: #ffffff0b;
-  --accent: #5ddfc0;
-  --accent-hover: #7cebd0;
-  --accent-strong: #65dfc2;
-  --accent-soft: #4cceb014;
-  --accent-border: #58d9b538;
-  --blue-accent: #91a9ff;
-  --upload-line: #435261;
-  --upload-bg: #20273170;
-  --range-track: #3c4653;
-  --toggle-off: #485461;
-  --checker-a: #242a35;
-  --checker-b: #303846;
-  --code-bg: #0d1118;
-  --code-text: #b5d9d1;
-  --panel-shadow: 0 8px 26px #00000012;
-  --card-shadow: 0 10px 30px #00000020;
-}
+/* EXECUTIVE DIGITAL — tokens institucionais. Claro é o padrão; escuro é a variante institucional. */
 body[data-theme="light"] {
   color-scheme: light;
-  --page-bg: #f2f4f6;
-  --surface: #ffffff;
-  --surface-raised: #f7f9fa;
-  --text: #222b36;
-  --muted: #667280;
-  --faint: #96a1ad;
-  --line: #182b3b14;
-  --hover: #263c5010;
-  --accent: #2fc3a2;
-  --accent-hover: #26af91;
-  --accent-strong: #199d82;
-  --accent-soft: #38c8a313;
-  --accent-border: #2fb99b46;
-  --blue-accent: #6b88ef;
-  --upload-line: #b8c3cc;
-  --upload-bg: #f8fafb;
-  --range-track: #d9e0e5;
-  --toggle-off: #c3ccd3;
-  --checker-a: #f1f3f5;
-  --checker-b: #e0e4e8;
-  --code-bg: #18212b;
-  --code-text: #c4e5db;
-  --panel-shadow: 0 5px 22px #29394b08;
-  --card-shadow: 0 10px 30px #26384b13;
+  --page-bg: #F4F7FB; --surface: #FFFFFF; --surface-raised: #E9EFF5;
+  --text: #162638; --muted: #526579; --faint: #5F7184;
+  --line: #D5DEE8; --hover: #1D426310;
+  --accent: #2563EB; --accent-hover: #1E4FC4; --accent-strong: #1D4263; --on-accent: #FFFFFF;
+  --accent-soft: #2563EB12; --accent-border: #2563EB40; --blue-accent: #2563EB; --tech-green: #0B7E82;
+  --upload-line: #9FB0C2; --upload-bg: #E9EFF580; --range-track: #D5DEE8; --toggle-off: #8A9BAD;
+  --checker-a: #EEF2F7; --checker-b: #E1E8F0; --code-bg: #162638; --code-text: #D5E3F0;
+  --panel-shadow: 0 1px 3px #16263612; --card-shadow: 0 4px 14px #16263614;
+}
+body[data-theme="dark"] {
+  color-scheme: dark;
+  --page-bg: #0F1B2A; --surface: #162638; --surface-raised: #1D3248;
+  --text: #EAF0F7; --muted: #A8B7C7; --faint: #8FA2B5;
+  --line: #FFFFFF1F; --hover: #FFFFFF0F;
+  --accent: #6EA0FF; --accent-hover: #8AB0FF; --accent-strong: #8FD6D8; --on-accent: #0F1B2A;
+  --accent-soft: #6EA0FF1F; --accent-border: #6EA0FF4D; --blue-accent: #6EA0FF; --tech-green: #8FD6D8;
+  --upload-line: #4A6178; --upload-bg: #1D324870; --range-track: #2E4660; --toggle-off: #5A6F85;
+  --checker-a: #1B2D42; --checker-b: #243A52; --code-bg: #0B1522; --code-text: #C9DCEF;
+  --panel-shadow: 0 1px 3px #00000030; --card-shadow: 0 4px 14px #00000033;
 }

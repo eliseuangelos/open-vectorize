@@ -1,13 +1,14 @@
 {
   "name": "angelos-open-vectorize",
-  "version": "3.1.0",
+  "version": "3.2.0",
   "private": true,
   "description": "Vetorizador open source com VTracer WebAssembly e correção geométrica validada por raster",
   "scripts": {
     "test": "node tests/vectorizer.test.js && node tests/vtracer-config.test.js && node tests/wasm-pack-config.test.js && node tests/svg-geometry.test.js",
-    "check": "node --check js/svg-geometry.js && node --check js/vectorizer.js && node --check js/vtracer-config.js && node --check js/image-loader.js && node --check js/svg-export.js && node --check js/png-export.js && node --check js/ui-controls.js && node --check js/app.js && node --check js/workers/vectorize.worker.mjs && node --check scripts/build-wasm.mjs && node --check scripts/prepare-pages.mjs",
+    "check": "node --check js/svg-geometry.js && node --check js/vectorizer.js && node --check js/vtracer-config.js && node --check js/image-loader.js && node --check js/svg-export.js && node --check js/png-export.js && node --check js/ui-controls.js && node --check js/app.js && node --check js/workers/vectorize.worker.mjs && node --check scripts/build-wasm.mjs && node --check scripts/prepare-pages.mjs && node --check js/editor.js",
     "build:wasm": "node scripts/build-wasm.mjs",
     "serve": "node serve.mjs",
-    "build:site": "node scripts/prepare-pages.mjs"
+    "build:site": "node scripts/prepare-pages.mjs",
+    "test:e2e": "node tests/e2e.cjs"
   }
 }

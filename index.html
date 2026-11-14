@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#10131a">
+  <meta name="theme-color" content="#F4F7FB">
   <meta name="description" content="AngelosOpenVectorize: vetorizador online gratuito e open source. Converta desenhos, logotipos e ilustrações em SVG editável com reconstrução geométrica validada pelos pixels, diretamente no navegador.">
   <meta name="keywords" content="vetorizar imagens grátis, vetorizador online gratuito, converter PNG para SVG, converter JPG para SVG, imagem para vetor, criar SVG online, vetorização de imagens">
   <meta name="author" content="Eliseu Fernandes Laurindo">
@@ -17,11 +17,12 @@
   <meta name="color-scheme" content="light dark">
   <title>AngelosOpenVectorize — Vetorizador de imagens online e gratuito</title>
   <link rel="icon" type="image/svg+xml" href="assets/icons/favicon.svg">
+  <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/themes.css">
   <link rel="stylesheet" href="css/responsive.css">
 </head>
-<body data-theme="dark">
+<body data-theme="light">
   <svg class="svg-library" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
     <symbol id="i-vector" viewBox="0 0 24 24"><path d="M5 5h.01M19 5h.01M19 19h.01M5 19h.01M5 5l14 0v14H5z"/><path d="m5 19 7-7 7 7M12 12l7-7"/></symbol>
     <symbol id="i-upload" viewBox="0 0 24 24"><path d="M12 16V4m-5 5 5-5 5 5M4 16v4h16v-4"/></symbol>
@@ -45,10 +46,10 @@
   <div class="app-shell">
     <header class="topbar">
       <a class="brand" href="./" aria-label="AngelosOpenVectorize, início">
-        <span class="brand-mark"><svg><use href="#i-vector"/></svg></span>
-        <span class="brand-copy"><strong>ANGELOS<span>OPENVECTORIZE</span></strong><small>RASTER → VECTOR</small></span>
+        <span class="brand-mark"><img src="assets/icons/brand-symbol.svg" alt="" width="37" height="37"></span>
+        <span class="brand-copy"><strong>Angelos<span>OpenVectorize</span></strong><small>Raster para vetor</small></span>
       </a>
-      <div class="topbar-center"><span class="status-dot"></span> <span>GRATUITO</span><span class="topbar-separator">·</span><span>PROCESSAMENTO LOCAL</span><span class="topbar-separator">·</span><span id="engineStatus" class="engine-chip" data-engine="pending">VTRACER + GEOMETRIA · AGUARDANDO IMAGEM</span></div>
+      <div class="topbar-center"><span class="status-dot"></span> <span>Gratuito</span><span class="topbar-separator">·</span><span>Processamento local</span><span class="topbar-separator">·</span><span id="engineStatus" class="engine-chip" data-engine="pending">Motor: aguardando imagem</span></div>
       <div class="topbar-actions">
         <button class="icon-button" id="helpButton" type="button" aria-label="Abrir ajuda" title="Ajuda"><svg><use href="#i-help"/></svg></button>
         <button class="icon-button" id="themeButton" type="button" aria-label="Alternar tema" title="Alternar tema"><svg id="themeIcon"><use href="#i-sun"/></svg></button>
@@ -59,7 +60,7 @@
     <main class="main-content">
       <section class="intro-row">
         <div>
-          <div class="eyebrow"><span class="eyebrow-line"></span> WORKSPACE DE VETORIZAÇÃO</div>
+          <div class="eyebrow"><span class="eyebrow-line"></span> Área de trabalho</div>
           <h1>Transforme pixels em <span>vetores.</span></h1>
           <p class="intro-copy">Converta desenhos, logotipos e ilustrações em SVG editável com VTracer e reconstrução geométrica local, diretamente no seu dispositivo.</p>
         </div>
@@ -69,7 +70,7 @@
       <section class="workspace" aria-label="Área de trabalho de vetorização">
         <aside class="settings-panel panel">
           <div class="panel-heading">
-            <div><span class="section-kicker">CONFIGURAÇÃO</span><h2>Seu projeto</h2></div>
+            <div><span class="section-kicker">Configuração</span><h2>Seu projeto</h2></div>
             <button id="resetButton" class="text-button" type="button"><svg><use href="#i-refresh"/></svg> Resetar</button>
           </div>
 
@@ -87,7 +88,7 @@
           </div>
 
           <div class="field-block mode-block">
-            <div class="field-heading"><label>Modo de vetorização</label><span class="field-hint">ESCOLHA UM PERFIL</span></div>
+            <div class="field-heading"><label>Modo de vetorização</label><span class="field-hint">Escolha um perfil</span></div>
             <div class="mode-grid" role="group" aria-label="Modo de vetorização">
               <button class="mode-card active" type="button" data-mode="bw" aria-pressed="true"><span class="mode-icon mono-icon">◐</span><strong>Preto e branco</strong><small>Logos e silhuetas</small></button>
               <button class="mode-card" type="button" data-mode="gray" aria-pressed="false"><span class="mode-icon gray-icon">◒</span><strong>Escala de cinza</strong><small>Tons e sombras</small></button>
@@ -121,7 +122,7 @@
           </div>
 
           <details class="advanced-settings" open>
-            <summary><span>AJUSTES AVANÇADOS</span><svg><use href="#i-chevron"/></svg></summary>
+            <summary><span>Ajustes avançados</span><svg><use href="#i-chevron"/></svg></summary>
             <div class="advanced-content">
               <div class="field-block compact-field">
                 <div class="field-heading"><label for="smoothRange">Suavização de contornos</label><output id="smoothValue">2</output></div>
@@ -167,10 +168,12 @@
               <span class="zoom-label" id="zoomLabel">100%</span>
               <button class="mini-icon-button" id="zoomInButton" type="button" title="Aumentar zoom" aria-label="Aumentar zoom"><svg><use href="#i-zoom-in"/></svg></button>
               <button class="fit-button" id="fitButton" type="button">Ajustar</button>
+              <button class="fit-button" id="editToggle" type="button" aria-pressed="false" disabled>Editar vetor</button>
             </div>
           </div>
 
-          <div class="compare-control hidden" id="compareControl"><span>ORIGINAL</span><input id="compareRange" type="range" min="0" max="100" value="50" aria-label="Comparar imagem original e vetorizada"><span>VETOR</span></div>
+          <div class="edit-bar hidden" id="editBar" role="toolbar" aria-label="Edição do vetor"><button class="small-outline-button" id="editUndo" type="button" disabled>Desfazer</button><button class="small-outline-button" id="editRedo" type="button" disabled>Refazer</button><button class="small-outline-button" id="editDelete" type="button" disabled>Excluir</button><label class="edit-color" for="editColor">Cor <input id="editColor" type="color" value="#000000" disabled></label><small class="field-hint">Clique em uma região para selecionar e arraste para mover. Alterar os ajustes recalcula o vetor e descarta as edições.</small></div>
+          <div class="compare-control hidden" id="compareControl"><span>Original</span><input id="compareRange" type="range" min="0" max="100" value="50" aria-label="Comparar imagem original e vetorizada"><span>Vetor</span></div>
 
           <div class="stage-wrap bg-checker" id="stageWrap">
             <div class="empty-state" id="emptyState">
@@ -178,7 +181,7 @@
               <h3>Sua tela está pronta.</h3>
               <p>Importe uma imagem para começar a transformar pixels em caminhos vetoriais.</p>
               <button type="button" class="secondary-button" id="emptyBrowseButton"><svg><use href="#i-upload"/></svg> Selecionar imagem</button>
-              <span class="empty-shortcut">OU ARRASTE UM ARQUIVO PARA ESTA ÁREA</span>
+              <span class="empty-shortcut">Ou arraste um arquivo para esta área</span>
             </div>
             <div class="visual-stage hidden" id="visualStage">
               <div class="visual-layer original-layer" id="originalLayer"><img id="originalPreview" alt="Imagem original importada"></div>
@@ -196,7 +199,7 @@
       </section>
 
       <section class="export-section panel" aria-label="Exportação">
-        <div class="export-heading"><div><span class="section-kicker">SAÍDA DO PROJETO</span><h2>Exportar resultado</h2><p>Seu vetor, pronto para editar e compartilhar.</p></div><div class="export-badge"><svg><use href="#i-check"/></svg> SVG REAL · EDITÁVEL</div></div>
+        <div class="export-heading"><div><span class="section-kicker">Saída do projeto</span><h2>Exportar resultado</h2><p>Seu vetor, pronto para editar e compartilhar.</p></div><div class="export-badge"><svg><use href="#i-check"/></svg> SVG real e editável</div></div>
         <div class="export-grid">
           <article class="export-card primary-export-card"><div class="export-card-icon svg-icon">&lt;/&gt;</div><div class="export-card-copy"><strong>Arquivo SVG</strong><span>Vetores editáveis para Inkscape, Illustrator e web.</span></div><button class="download-button" id="downloadSvgButton" type="button" disabled><svg><use href="#i-download"/></svg> Baixar SVG</button></article>
           <article class="export-card"><div class="export-card-icon png-icon">PNG</div><div class="export-card-copy"><strong>Imagem PNG</strong><span>Rasterize em alta resolução com fundo opcional.</span></div><div class="export-actions-inline"><select id="pngScale" aria-label="Resolução PNG"><option value="1">1×</option><option value="2" selected>2×</option><option value="4">4×</option></select><select id="pngBackground" aria-label="Fundo do PNG"><option value="transparent">Transparente</option><option value="white">Branco</option><option value="custom">Cor</option></select><input id="pngCustomColor" type="color" value="#ffffff" aria-label="Cor personalizada do PNG" hidden><button class="small-outline-button" id="downloadPngButton" type="button" disabled>Baixar</button></div></article>
@@ -209,13 +212,13 @@
         <article class="info-card"><span class="info-icon"><svg><use href="#i-shield"/></svg></span><h3>Privacidade em primeiro lugar</h3><p>A conversão acontece localmente no navegador. Seus arquivos não são enviados a um servidor.</p></article>
         <article class="info-card"><span class="info-icon"><svg><use href="#i-spark"/></svg></span><h3>Motor open source</h3><p>Combina VTracer com um pós-processador geométrico próprio, determinístico e executado localmente. Linhas candidatas são verificadas por amostragem subpixel da imagem original antes da correção.</p></article>
       </section>
-      <footer class="site-footer"><span>ANGELOSOPENVECTORIZE <span class="footer-separator">/</span> OPEN SOURCE · GRATUITO</span><span>Desenvolvido por <a href="https://eliseuangelos.github.io/" target="_blank" rel="noopener noreferrer">Eliseu Fernandes Laurindo</a></span></footer>
+      <footer class="site-footer"><span>AngelosOpenVectorize <span class="footer-separator">/</span> Código aberto e gratuito</span><span>Desenvolvido por <a href="https://eliseuangelos.github.io/" target="_blank" rel="noopener noreferrer">Eliseu Fernandes Laurindo</a><br>© <span id="year"></span> Eliseu Fernandes Laurindo. Todos os direitos reservados.</span></footer>
     </main>
   </div>
 
-  <dialog class="modal" id="codeModal" aria-labelledby="codeModalTitle"><div class="modal-header"><div><span class="section-kicker">ESTRUTURA VETORIAL</span><h2 id="codeModalTitle">Código SVG</h2></div><button class="icon-button" data-close-modal type="button" aria-label="Fechar"><svg><use href="#i-close"/></svg></button></div><div class="code-stats" id="codeStats"></div><pre class="code-output"><code id="svgCode"></code></pre><div class="modal-actions"><button class="secondary-button" id="copySvgButton" type="button"><svg><use href="#i-copy"/></svg> Copiar código</button><button class="primary-button" id="modalDownloadButton" type="button"><svg><use href="#i-download"/></svg> Baixar SVG</button></div></dialog>
+  <dialog class="modal" id="codeModal" aria-labelledby="codeModalTitle"><div class="modal-header"><div><span class="section-kicker">Estrutura vetorial</span><h2 id="codeModalTitle">Código SVG</h2></div><button class="icon-button" data-close-modal type="button" aria-label="Fechar"><svg><use href="#i-close"/></svg></button></div><div class="code-stats" id="codeStats"></div><pre class="code-output"><code id="svgCode"></code></pre><div class="modal-actions"><button class="secondary-button" id="copySvgButton" type="button"><svg><use href="#i-copy"/></svg> Copiar código</button><button class="primary-button" id="modalDownloadButton" type="button"><svg><use href="#i-download"/></svg> Baixar SVG</button></div></dialog>
 
-  <dialog class="modal help-modal" id="helpModal" aria-labelledby="helpModalTitle"><div class="modal-header"><div><span class="section-kicker">CENTRAL DE AJUDA</span><h2 id="helpModalTitle">Como funciona a vetorização?</h2></div><button class="icon-button" data-close-modal type="button" aria-label="Fechar"><svg><use href="#i-close"/></svg></button></div><div class="help-content">
+  <dialog class="modal help-modal" id="helpModal" aria-labelledby="helpModalTitle"><div class="modal-header"><div><span class="section-kicker">Central de ajuda</span><h2 id="helpModalTitle">Como funciona a vetorização?</h2></div><button class="icon-button" data-close-modal type="button" aria-label="Fechar"><svg><use href="#i-close"/></svg></button></div><div class="help-content">
     <details open><summary>O que é vetorização?</summary><p>É o processo de interpretar pixels e reconstruir regiões da imagem como formas geométricas. Em vez de uma grade fixa de pontos, o SVG descreve contornos por caminhos que podem ser redimensionados e editados.</p></details>
     <details><summary>Raster e vetor: qual a diferença?</summary><p>PNG, JPG e WEBP são formatos rasterizados: armazenam pixels. SVG é vetorial: descreve elementos como caminhos, formas e preenchimentos. Vetores podem ser ampliados sem a pixelização típica de imagens raster.</p></details>
     <details><summary>O que cada modo faz?</summary><p><b>Preto e branco:</b> usa segmentação binária e pode aplicar limiar adaptativo. <b>Escala de cinza:</b> reduz a arte a níveis discretos de cinza. <b>Colorido:</b> usa agrupamento de cores e composição mosaico para reconstruir regiões chapadas; o watershed fica reservado para fotografias e imagens de transição complexa. <b>Foto estilizada:</b> usa paleta e filtragem mais conservadoras; o resultado é uma interpretação vetorial, não uma reprodução fotográfica perfeita.</p></details>
@@ -235,6 +238,7 @@
   <script src="js/svg-export.js"></script>
   <script src="js/png-export.js"></script>
   <script src="js/ui-controls.js"></script>
+  <script src="js/editor.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>

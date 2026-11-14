@@ -15,7 +15,7 @@
   function initTheme() {
     let stored = null;
     try { stored = localStorage.getItem(THEME_KEY); } catch (error) { /* private browsing */ }
-    setTheme(stored || 'dark');
+    setTheme(stored || 'light');
     document.getElementById('themeButton')?.addEventListener('click', () => {
       setTheme(document.body.dataset.theme === 'dark' ? 'light' : 'dark');
     });

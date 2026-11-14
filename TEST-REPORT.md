@@ -1,4 +1,4 @@
-# Relatório de testes — AngelosOpenVectorize 3.1.0
+# Relatório de testes — AngelosOpenVectorize 3.2.0 (inclui os resultados da 3.1.0 mais adiante)
 
 **Data:** 13/11/2026  
 **Ambiente:** Node.js 22.16.0, npm 10.9.2.  
@@ -21,6 +21,29 @@
 | Servidor HTTP | **Aprovado** | `/`, Worker e módulo `svg-geometry.js` responderam HTTP 200 localmente |
 | Compilação VTracer WASM | **Não compilada nesta sessão** | Não há Rust/Cargo/wasm-pack nem resolução DNS no ambiente |
 | Comparação com Vectorizer.ai e Open Vectorizer usando imagens reais | **Não realizada** | Não foram fornecidos arquivos de benchmark do usuário; alegações dos projetos foram tratadas como auto-relatadas |
+
+## Atualização 3.2.0 — 14/11/2026
+
+**Ambiente:** Node.js 22, Playwright com Chromium headless, `serve.mjs` em porta local. Sem Rust/Cargo/wasm-pack e sem rede.
+
+| Verificação | Resultado | Evidência / limite |
+|---|---|---|
+| Testes unitários existentes | **Aprovado** | `npm test`: 4 suítes, 7 mensagens OK |
+| Sintaxe JavaScript (inclui `js/editor.js`) | **Aprovado** | `npm run check` |
+| Teste de ponta a ponta no navegador | **Aprovado: 32 de 32** | `npm run test:e2e` (`tests/e2e.cjs`) |
+| Ativos oficiais preservados | **Aprovado** | SHA-256 dos três arquivos conferido; favicon SVG e Apple Touch Icon com caminhos relativos; símbolo carregado no cabeçalho |
+| Tema claro padrão e tema escuro | **Aprovado** | Fundos `#F4F7FB` e `#0F1B2A` conferidos no navegador |
+| Contraste dos tokens | **Medido (WCAG)** | Texto/superfície 15,35:1; secundário 6,01:1; terciário 5,02:1; botão branco sobre azul 5,17:1; no escuro, texto 13,38:1 e botão 6,72:1. Só os pares de tokens foram medidos, não cada componente |
+| Editor: selecionar, cor, mover, excluir, desfazer/refazer | **Aprovado** | Operados por mouse e teclado no navegador |
+| SVG e PNG exportados refletem as edições | **Aprovado** | XML válido, sem `<image>`, sem href externo, sem marcas de seleção; PNG 2× com 600×400 |
+| Recalcular descarta edições e sai do modo de edição | **Aprovado** | |
+| Sem rolagem horizontal em 320, 375, 390, 768, 1024, 1366 e 1440 px | **Aprovado** | Um estouro em 1024 px (1113 px) apareceu durante os testes, causado por um rótulo longo do chip do motor, e foi corrigido |
+| Console e rede | **Aprovado com ressalva** | Único erro: 404 do pacote WASM, que não está compilado nesta cópia |
+| Compilação VTracer WASM e validação do `wasm-opt = false` no navegador | **Não realizadas** | Sem toolchain Rust nem rede; o app roda com o motor de reserva e o rótulo informa isso |
+| Integração do Open Vectorizer | **Não realizada** | Ver `ENGINE-RESEARCH.md` |
+| Auditorias automatizadas de acessibilidade (axe/Lighthouse) e dispositivos reais | **Não realizadas** | |
+
+**Pendências conhecidas desta atualização:** fontes Inter, Manrope e IBM Plex Mono declaradas com fallback de sistema, mas os arquivos não estão embutidos; vários rótulos ainda usam 8 a 11 px; o editor não tem edição de nós, ferramentas de desenho, camadas nem seleção por teclado, e cada caminho do VTracer é um objeto; o teste e2e ainda não roda no CI (exige Playwright).
 
 ## Nova etapa Angelos Geometry
 
