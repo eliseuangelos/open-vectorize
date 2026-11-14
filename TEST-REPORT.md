@@ -28,9 +28,11 @@
 
 | Verificação | Resultado | Evidência / limite |
 |---|---|---|
-| Testes unitários existentes | **Aprovado** | `npm test`: 4 suítes, 7 mensagens OK |
+| Testes unitários | **Aprovado** | `npm test`: 5 suítes, 8 mensagens OK (inclui `tests/svg-dimensions.test.js`) |
 | Sintaxe JavaScript (inclui `js/editor.js`) | **Aprovado** | `npm run check` |
-| Teste de ponta a ponta no navegador | **Aprovado: 32 de 32** | `npm run test:e2e` (`tests/e2e.cjs`) |
+| Teste de ponta a ponta no navegador | **Aprovado: 37 de 37** | `npm run test:e2e` (`tests/e2e.cjs`) |
+| Imagens muito grandes (4000×3000 e 3000×6000) | **Aprovado** | Original e vetor inteiros dentro da área de visualização; antes da correção, a imagem alta ficava cortada. Medido com o motor de reserva |
+| `viewBox` do SVG no estilo VTracer | **Aprovado em teste de renderização** | Simula a saída sem `viewBox`; o canto inferior direito ficava vazio antes e fica preenchido depois. O pacote WASM real não foi executado aqui |
 | Ativos oficiais preservados | **Aprovado** | SHA-256 dos três arquivos conferido; favicon SVG e Apple Touch Icon com caminhos relativos; símbolo carregado no cabeçalho |
 | Tema claro padrão e tema escuro | **Aprovado** | Fundos `#F4F7FB` e `#0F1B2A` conferidos no navegador |
 | Contraste dos tokens | **Medido (WCAG)** | Texto/superfície 15,35:1; secundário 6,01:1; terciário 5,02:1; botão branco sobre azul 5,17:1; no escuro, texto 13,38:1 e botão 6,72:1. Só os pares de tokens foram medidos, não cada componente |

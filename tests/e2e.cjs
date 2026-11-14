@@ -100,6 +100,27 @@ async function run(page, errors, failed) {
   await page.waitForFunction(() => document.querySelector('#editToggle').getAttribute('aria-pressed') === 'false', null, { timeout: 20000 });
   t('recalcular descarta edições e sai do modo de edição', await red() === 0);
 
+  // Imagens muito grandes (paisagem e retrato) devem aparecer inteiras, tanto o original quanto o vetor
+  const inside = (r, s) => r[0] >= s[0] - 1 && r[1] >= s[1] - 1 && r[0] + r[2] <= s[0] + s[2] + 1 && r[1] + r[3] <= s[1] + s[3] + 1;
+  for (const [w, h] of [[4000, 3000], [3000, 6000]]) {
+    const big = await page.evaluate(([w, h]) => { const c = document.createElement('canvas'); c.width = w; c.height = h; const x = c.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, w, h); x.fillStyle = '#000'; x.fillRect(w * .1, h * .1, w * .8, h * .8); return c.toDataURL().split(',')[1]; }, [w, h]);
+    await page.click('#removeFileButton');
+    await page.setInputFiles('#fileInput', { name: `grande-${w}.png`, mimeType: 'image/png', buffer: Buffer.from(big, 'base64') });
+    await page.waitForSelector('#vectorPreview svg path', { timeout: 60000 });
+    const rects = async (view) => { await page.click(`.canvas-tab[data-view="${view}"]`); await page.waitForTimeout(250); return page.evaluate(() => { const R = (s) => { const b = document.querySelector(s).getBoundingClientRect(); return [b.left, b.top, b.width, b.height]; }; return { stage: R('#stageWrap'), svg: R('#vectorPreview svg'), img: R('#originalPreview') }; }); };
+    const v = await rects('vector'), o = await rects('original');
+    t(`vetor ${w}×${h} aparece inteiro na área de visualização`, inside(v.svg, v.stage), JSON.stringify(v.svg.map(Math.round)));
+    t(`original ${w}×${h} aparece inteiro na área de visualização`, inside(o.img, o.stage), JSON.stringify(o.img.map(Math.round)));
+  }
+  // O SVG do VTracer (sem viewBox) deve ganhar viewBox no espaço de trabalho ao receber o tamanho original
+  await page.addScriptTag({ url: base + 'js/svg-dimensions.js' });
+  const px = await page.evaluate(async () => {
+    const raw = '<svg xmlns="http://www.w3.org/2000/svg" width="880" height="660"><path d="M0 0H880V660H0Z" fill="#000"/></svg>';
+    const corner = async (svg) => { const u = URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml' })), im = new Image(); im.src = u; await im.decode(); const c = document.createElement('canvas'); c.width = 400; c.height = 300; const g = c.getContext('2d'); g.drawImage(im, 0, 0, 400, 300); URL.revokeObjectURL(u); return g.getImageData(399, 299, 1, 1).data[3]; };
+    return { antes: await corner(raw.replace('width="880" height="660"', 'width="4000" height="3000"')), depois: await corner(window.SvgDimensions.setDimensions(raw, 4000, 3000, 880, 660)) };
+  });
+  t('correção do viewBox: canto inferior direito preenchido (antes da correção ficava vazio)', px.antes === 0 && px.depois === 255, JSON.stringify(px));
+
   // Responsividade
   for (const w of [320, 375, 390, 768, 1024, 1366, 1440]) {
     await page.setViewportSize({ width: w, height: 900 });

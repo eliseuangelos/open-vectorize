@@ -2,6 +2,7 @@
 import '../vtracer-config.js';
 import '../vectorizer.js';
 import '../svg-geometry.js';
+import '../svg-dimensions.js';
 
 let vtracerPromise;
 
@@ -14,21 +15,6 @@ async function loadVTracer() {
     }).catch(() => null);
   }
   return vtracerPromise;
-}
-
-function updateSvgDimensions(svg, width, height) {
-  const start = svg.search(/<svg\b/i);
-  const end = svg.indexOf('>', start);
-  if (start < 0 || end < 0) throw new Error('O VTracer não retornou um documento SVG válido.');
-  let opening = svg.slice(start, end + 1);
-  const setAttribute = (name, value) => {
-    const expression = new RegExp(`\\s${name}=(['"]).*?\\1`, 'i');
-    if (expression.test(opening)) opening = opening.replace(expression, ` ${name}="${value}"`);
-    else opening = opening.replace(/>$/, ` ${name}="${value}">`);
-  };
-  setAttribute('width', width);
-  setAttribute('height', height);
-  return svg.slice(0, start) + opening + svg.slice(end + 1);
 }
 
 function buildStats(svg, width, height, workWidth, workHeight) {
@@ -65,7 +51,7 @@ self.onmessage = async function (event) {
       if (/<image\b|data:image\//i.test(svg)) {
         throw new Error('A saída do motor contém conteúdo raster incorporado e foi recusada.');
       }
-      svg = updateSvgDimensions(svg, options.outputWidth || width, options.outputHeight || height);
+      svg = self.SvgDimensions.setDimensions(svg, options.outputWidth || width, options.outputHeight || height, width, height);
       result = {
         svg,
         engine: 'vtracer',

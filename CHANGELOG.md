@@ -1,5 +1,11 @@
 # Histórico de versões
 
+## 3.2.1 — 14/11/2026
+
+- Corrigido: imagens maiores que a resolução de trabalho (640 a 1100 px) apareciam cortadas. O SVG do VTracer não tem `viewBox`; o worker aplicava o tamanho original sem ele, e o desenho ocupava só um canto. Novo módulo `js/svg-dimensions.js` garante o `viewBox` no espaço de coordenadas de trabalho (afeta a prévia, o SVG e o PNG exportados).
+- Corrigido: em imagens muito altas, a trilha da grade das camadas seguia o tamanho intrínseco do conteúdo; a prévia ficava deslocada e o original ficava com o dobro da altura da área, cortados pelo `overflow: hidden`. As trilhas agora seguem o tamanho da área.
+- Novos testes: `tests/svg-dimensions.test.js` e, no e2e, imagens de 4000×3000 e 3000×6000 inteiras na tela e renderização do canto inferior direito.
+
 ## 3.2.0 — 14/11/2026
 
 - Ativos oficiais da marca (`brand-symbol.svg`, `favicon.svg`, `apple-touch-icon.png`) copiados sem alteração para `assets/icons/`; o `favicon.svg` anterior foi substituído. Hashes SHA-256 registrados em `tests/brand-assets.sha256` e conferidos pelo teste e2e.
