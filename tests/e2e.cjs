@@ -14,7 +14,7 @@ let ok = 0, bad = 0;
 const t = (name, cond, extra = '') => { cond ? ok++ : bad++; console.log(`${cond ? 'PASS' : 'FAIL'} ${name}${extra ? ' — ' + extra : ''}`); };
 const sha = (file) => crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex');
 
-async function run(page, errors, failed) {
+async function run(page, errors, failed, browser) {
   await page.goto(base);
   // Identidade e ativos oficiais
   const expected = Object.fromEntries(fs.readFileSync(path.join(__dirname, 'brand-assets.sha256'), 'utf8').trim().split('\n').map((l) => l.trim().split(/\s+/).reverse()));
@@ -34,7 +34,10 @@ async function run(page, errors, failed) {
   t('símbolo oficial carregado no cabeçalho', head.mark);
   t('tema claro institucional por padrão (#F4F7FB)', head.theme === 'light' && head.bg === 'rgb(244, 247, 251)', head.bg);
   t('rodapé com créditos e ano automático', head.footer.includes('Desenvolvido por Eliseu Fernandes Laurindo') && head.footer.includes(`© ${new Date().getFullYear()} Eliseu Fernandes Laurindo. Todos os direitos reservados.`));
+  const icon = () => page.getAttribute('#themeIcon use', 'href');
+  t('tema claro mostra o ícone do sol', await icon() === '#i-sun');
   await page.click('#themeButton');
+  t('tema escuro mostra o ícone da lua', await icon() === '#i-moon');
   t('tema escuro institucional (#0F1B2A)', await page.waitForFunction(() => getComputedStyle(document.body).backgroundColor === 'rgb(15, 27, 42)', null, { timeout: 3000 }).then(() => true, () => false));
   await page.click('#themeButton');
   t('retorno ao tema claro (#F4F7FB)', await page.waitForFunction(() => getComputedStyle(document.body).backgroundColor === 'rgb(244, 247, 251)', null, { timeout: 3000 }).then(() => true, () => false));
@@ -102,6 +105,7 @@ async function run(page, errors, failed) {
 
   // Imagens muito grandes (paisagem e retrato) devem aparecer inteiras, tanto o original quanto o vetor
   const inside = (r, s) => r[0] >= s[0] - 1 && r[1] >= s[1] - 1 && r[0] + r[2] <= s[0] + s[2] + 1 && r[1] + r[3] <= s[1] + s[3] + 1;
+  await page.setViewportSize({ width: 1366, height: 768 });
   for (const [w, h] of [[4000, 3000], [3000, 6000]]) {
     const big = await page.evaluate(([w, h]) => { const c = document.createElement('canvas'); c.width = w; c.height = h; const x = c.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, w, h); x.fillStyle = '#000'; x.fillRect(w * .1, h * .1, w * .8, h * .8); return c.toDataURL().split(',')[1]; }, [w, h]);
     await page.click('#removeFileButton');
@@ -111,6 +115,11 @@ async function run(page, errors, failed) {
     const v = await rects('vector'), o = await rects('original');
     t(`vetor ${w}×${h} aparece inteiro na área de visualização`, inside(v.svg, v.stage), JSON.stringify(v.svg.map(Math.round)));
     t(`original ${w}×${h} aparece inteiro na área de visualização`, inside(o.img, o.stage), JSON.stringify(o.img.map(Math.round)));
+    const c = await rects('compare');
+    const near = (a, b) => Math.abs(a - b) <= 2;
+    t(`comparar ${w}×${h}: vetor e original com o mesmo tamanho e posição`, near(c.svg[2], c.img[2]) && near(c.svg[3], c.img[3]) && near(c.svg[0], c.img[0]) && near(c.svg[1], c.img[1]), `vetor=${c.svg.map(Math.round)} original=${c.img.map(Math.round)}`);
+    const fits = await page.waitForFunction(() => { const b = document.querySelector('.canvas-panel').getBoundingClientRect(); return b.top >= -1 && b.bottom <= innerHeight + 1; }, null, { timeout: 3000 }).then(() => true, () => false);
+    t(`painel de visualização inteiro dentro de uma janela de 1366×768 (${w}×${h})`, fits, JSON.stringify(await page.evaluate(() => { const b = document.querySelector('.canvas-panel').getBoundingClientRect(); return { scrollY, top: Math.round(b.top), bottom: Math.round(b.bottom), innerHeight, docH: document.documentElement.scrollHeight }; })));
   }
   // O SVG do VTracer (sem viewBox) deve ganhar viewBox no espaço de trabalho ao receber o tamanho original
   await page.addScriptTag({ url: base + 'js/svg-dimensions.js' });
@@ -120,6 +129,37 @@ async function run(page, errors, failed) {
     return { antes: await corner(raw.replace('width="880" height="660"', 'width="4000" height="3000"')), depois: await corner(window.SvgDimensions.setDimensions(raw, 4000, 3000, 880, 660)) };
   });
   t('correção do viewBox: canto inferior direito preenchido (antes da correção ficava vazio)', px.antes === 0 && px.depois === 255, JSON.stringify(px));
+
+  // Caminho do VTracer simulado (módulo WASM falso interceptado só neste teste): SVG sem viewBox, no espaço de trabalho
+  const FAKE = `export default async function () {}
+export function engine_version() { return 'simulado'; }
+export function convert(rgba, w, h) {
+  const bar = (pw, ph) => 'M0 0 L' + pw + ' 0 L' + pw + ' ' + ph + ' L0 ' + ph + ' Z';
+  return '<?xml version="1.0" encoding="UTF-8"?>\\n<svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="' + w + '" height="' + h + '">\\n' +
+    '<path d="' + bar(w, 40) + '" fill="#ff0000" transform="translate(0,0)"/><path d="' + bar(w, 40) + '" fill="#00aa00" transform="translate(0,' + (h - 40) + ')"/>' +
+    '<path d="' + bar(40, h) + '" fill="#0000ff" transform="translate(0,0)"/><path d="' + bar(40, h) + '" fill="#ff00ff" transform="translate(' + (w - 40) + ',0)"/></svg>';
+}`;
+  const ctx = await browser.newContext({ viewport: { width: 1366, height: 768 } });
+  await ctx.route('**/js/wasm/pkg/angelos_open_vectorize_wasm.js', (route) => route.fulfill({ status: 200, contentType: 'text/javascript', body: FAKE }));
+  const vp = await ctx.newPage();
+  await vp.goto(base);
+  for (const [w, h] of [[4000, 3000], [3000, 6000]]) {
+    const big = await vp.evaluate(([w, h]) => { const c = document.createElement('canvas'); c.width = w; c.height = h; const x = c.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, w, h); x.fillStyle = '#000'; x.fillRect(w * .2, h * .2, w * .6, h * .6); return c.toDataURL().split(',')[1]; }, [w, h]);
+    if (await vp.isVisible('#removeFileButton')) await vp.click('#removeFileButton');
+    await vp.setInputFiles('#fileInput', { name: `vt-${w}.png`, mimeType: 'image/png', buffer: Buffer.from(big, 'base64') });
+    await vp.waitForSelector('#vectorPreview svg path', { timeout: 60000 });
+    const info = await vp.evaluate(async () => {
+      const s = document.querySelector('#vectorPreview svg'), vb = s.viewBox.baseVal, cw = 200, ch = Math.round(200 * vb.height / vb.width);
+      const u = URL.createObjectURL(new Blob([s.outerHTML], { type: 'image/svg+xml' })), im = new Image(); im.src = u; await im.decode();
+      const c = document.createElement('canvas'); c.width = cw; c.height = ch; const g = c.getContext('2d'); g.drawImage(im, 0, 0, cw, ch); URL.revokeObjectURL(u);
+      const px = (x, y) => Array.from(g.getImageData(x, y, 1, 1).data);
+      return { chip: document.querySelector('#engineStatus').textContent, vb: [vb.width, vb.height], w: s.getAttribute('width'), top: px(cw / 2, 3), bottom: px(cw / 2, ch - 4), left: px(3, ch / 2), right: px(cw - 4, ch / 2) };
+    });
+    const [tr, tg, tb] = info.top, [br_, bg, bb] = info.bottom, [lr, lg, lb] = info.left, [rr, rg, rb] = info.right;
+    t(`VTracer simulado ${w}×${h}: motor VTracer ativo e viewBox no espaço de trabalho`, /VTracer WASM/.test(info.chip) && info.w === String(w) && info.vb[0] <= 1100 && info.vb[1] <= 1100, `${info.chip} vb=${info.vb} width=${info.w}`);
+    t(`VTracer simulado ${w}×${h}: as quatro bordas do desenho aparecem (nada cortado)`, tr > 200 && tg < 80 && tb < 80 && bg > 120 && br_ < 80 && bb < 80 && lb > 200 && lr < 80 && lg < 80 && rr > 200 && rb > 200 && rg < 80, JSON.stringify([info.top, info.bottom, info.left, info.right]));
+  }
+  await ctx.close();
 
   // Responsividade
   for (const w of [320, 375, 390, 768, 1024, 1366, 1440]) {
@@ -141,7 +181,7 @@ async function run(page, errors, failed) {
   page.on('console', (m) => { if (m.type() === 'error') errors.push(`${m.text()} @${m.location().url || ''}`); });
   page.on('pageerror', (e) => errors.push(String(e)));
   page.on('response', (r) => { if (r.status() >= 400) failed.push(`${r.status()} ${r.url()}`); });
-  try { await run(page, errors, failed); } catch (e) { t('execução sem exceção', false, String((e && e.stack) || e).split('\n').slice(0, 4).join(' / ')); }
+  try { await run(page, errors, failed, browser); } catch (e) { t('execução sem exceção', false, String((e && e.stack) || e).split('\n').slice(0, 4).join(' / ')); }
   await browser.close(); server.kill();
   console.log(`\n${ok} aprovados, ${bad} falhas`);
   process.exit(bad ? 1 : 0);

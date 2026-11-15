@@ -6,7 +6,7 @@
     const selected = theme === 'light' ? 'light' : 'dark';
     document.body.dataset.theme = selected;
     const icon = document.querySelector('#themeIcon use');
-    if (icon) icon.setAttribute('href', selected === 'dark' ? '#i-sun' : '#i-moon');
+    if (icon) icon.setAttribute('href', selected === 'dark' ? '#i-moon' : '#i-sun');
     const themeButton = document.getElementById('themeButton');
     if (themeButton) themeButton.setAttribute('aria-label', selected === 'dark' ? 'Ativar tema claro' : 'Ativar tema escuro');
     try { localStorage.setItem(THEME_KEY, selected); } catch (error) { /* private browsing */ }

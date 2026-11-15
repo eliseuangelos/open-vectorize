@@ -217,6 +217,7 @@
     setBusy(false);
     updateStageView();
     setZoom(state.zoom, false);
+    if (state.revealCanvas) { state.revealCanvas = false; document.querySelector('.canvas-panel')?.scrollIntoView({ block: 'start', behavior: 'instant' }); }
     const pathCount = (result.stats.pathCount ?? result.stats.contourCount ?? 0).toLocaleString('pt-BR');
     const simplified = Number(result.stats.geometryCommandsRemoved || 0);
     const recoveredLines = Number(result.stats.rasterLinesRecovered || 0);
@@ -300,6 +301,7 @@
       const decoded = await ImageLoader.decodeFile(file);
       if (state.source) ImageLoader.release(state.source);
       state.source = decoded;
+      state.revealCanvas = true;
       state.resultSvg = '';
       state.stats = null;
       state.zoom = 1; state.panX = 0; state.panY = 0;

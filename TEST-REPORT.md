@@ -30,7 +30,7 @@
 |---|---|---|
 | Testes unitários | **Aprovado** | `npm test`: 5 suítes, 8 mensagens OK (inclui `tests/svg-dimensions.test.js`) |
 | Sintaxe JavaScript (inclui `js/editor.js`) | **Aprovado** | `npm run check` |
-| Teste de ponta a ponta no navegador | **Aprovado: 37 de 37** | `npm run test:e2e` (`tests/e2e.cjs`) |
+| Teste de ponta a ponta no navegador | **Aprovado: 47 de 47** (repetido 4 vezes, sem oscilação) | `npm run test:e2e` (`tests/e2e.cjs`) |
 | Imagens muito grandes (4000×3000 e 3000×6000) | **Aprovado** | Original e vetor inteiros dentro da área de visualização; antes da correção, a imagem alta ficava cortada. Medido com o motor de reserva |
 | `viewBox` do SVG no estilo VTracer | **Aprovado em teste de renderização** | Simula a saída sem `viewBox`; o canto inferior direito ficava vazio antes e fica preenchido depois. O pacote WASM real não foi executado aqui |
 | Ativos oficiais preservados | **Aprovado** | SHA-256 dos três arquivos conferido; favicon SVG e Apple Touch Icon com caminhos relativos; símbolo carregado no cabeçalho |
@@ -41,6 +41,9 @@
 | Recalcular descarta edições e sai do modo de edição | **Aprovado** | |
 | Sem rolagem horizontal em 320, 375, 390, 768, 1024, 1366 e 1440 px | **Aprovado** | Um estouro em 1024 px (1113 px) apareceu durante os testes, causado por um rótulo longo do chip do motor, e foi corrigido |
 | Console e rede | **Aprovado com ressalva** | Único erro: 404 do pacote WASM, que não está compilado nesta cópia |
+| Caminho do VTracer simulado, imagens 4000×3000 e 3000×6000 | **Aprovado** | Módulo WASM falso interceptado só no teste: o motor VTracer é usado, o SVG ganha `viewBox` e as quatro bordas do desenho aparecem na tela |
+| Vetor e original alinhados na comparação; painel inteiro numa janela de 1366×768 | **Aprovado** | Mesmo tamanho e posição (tolerância de 2 px) |
+| Ícone do tema | **Aprovado** | Sol no tema claro, lua no tema escuro |
 | Compilação VTracer WASM e validação do `wasm-opt = false` no navegador | **Não realizadas** | Sem toolchain Rust nem rede; o app roda com o motor de reserva e o rótulo informa isso |
 | Integração do Open Vectorizer | **Não realizada** | Ver `ENGINE-RESEARCH.md` |
 | Auditorias automatizadas de acessibilidade (axe/Lighthouse) e dispositivos reais | **Não realizadas** | |

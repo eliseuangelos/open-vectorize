@@ -1,6 +1,6 @@
 {
   "name": "angelos-open-vectorize",
-  "version": "3.2.1",
+  "version": "3.2.2",
   "private": true,
   "description": "Vetorizador open source com VTracer WebAssembly e correção geométrica validada por raster",
   "scripts": {

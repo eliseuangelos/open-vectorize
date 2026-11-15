@@ -1,5 +1,12 @@
 # Histórico de versões
 
+## 3.2.2 — 14/11/2026
+
+- Corrigido: o vetor era limitado a 880×610 px enquanto o original usava toda a área, então os dois ficavam com tamanhos diferentes e o vetor parecia cortado na comparação. Agora ocupam a mesma área e ficam alinhados.
+- Corrigido: o painel de visualização passava da altura da janela (parte do vetor ficava abaixo da dobra). Em telas com mais de 680 px de largura o painel agora cabe na janela e acompanha a rolagem das configurações; após a primeira vetorização a página rola até ele.
+- Ícone do tema no padrão dos sites: sol no tema claro e lua no tema escuro (antes mostrava o tema de destino).
+- Teste de ponta a ponta com o caminho do VTracer simulado (módulo WASM falso interceptado só no teste) para imagens de 4000×3000 e 3000×6000.
+
 ## 3.2.1 — 14/11/2026
 
 - Corrigido: imagens maiores que a resolução de trabalho (640 a 1100 px) apareciam cortadas. O SVG do VTracer não tem `viewBox`; o worker aplicava o tamanho original sem ele, e o desenho ocupava só um canto. Novo módulo `js/svg-dimensions.js` garante o `viewBox` no espaço de coordenadas de trabalho (afeta a prévia, o SVG e o PNG exportados).
